@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from './constants';
 import { BootScene } from '../scenes/BootScene';
+import { MenuScene } from '../scenes/MenuScene';     // <--- VÉRIFIEZ CET IMPORT
 import { ExteriorScene } from '../scenes/ExteriorScene';
 import { HallwayScene } from '../scenes/HallwayScene';
 import { ServiceScene } from '../scenes/ServiceScene';
@@ -24,5 +25,6 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false
     }
   },
-  scene: [BootScene, ExteriorScene, HallwayScene, ServiceScene, UIScene]
+  // MenuScene DOIT impérativement figurer dans ce tableau :
+  scene: [BootScene, MenuScene, ExteriorScene, HallwayScene, ServiceScene, UIScene]
 };

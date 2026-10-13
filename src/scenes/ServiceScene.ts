@@ -3,6 +3,7 @@ import { Player } from '../entities/Player';
 import { NPC } from '../entities/NPC';
 import { SERVICES } from '../data/services';
 import { ServiceRoomConfig } from '../game/types';
+import { TILES, SCALED_TILE, TILE_SCALE } from '../game/constants';
 import { SoundSystem } from '../systems/SoundSystem';
 
 export class ServiceScene extends Phaser.Scene {
@@ -23,46 +24,54 @@ export class ServiceScene extends Phaser.Scene {
   }
 
   create() {
-    this.scene.get('UIScene').events.emit('set_zone_name', `ISITCOM - ${this.serviceConfig.name}`);
+    this.scene.get('UIScene').events.emit('set_zone_name', `ISITCOM — ${this.serviceConfig.name}`);
     this.scene.get('UIScene').events.emit('mission_trigger', this.serviceConfig.missionId);
-
-    // Sol de la pièce
-    for (let x = 0; x < 25; x++) {
-      for (let y = 0; y < 19; y++) {
-        this.add.image(x * 32 + 16, y * 32 + 16, 'tile_indoor_floor');
-      }
-    }
 
     const walls = this.physics.add.staticGroup();
 
-    // Murs périphériques
+    // 1. Sol du bureau
+    for (let x = 0; x < 25; x++) {
+      for (let y = 0; y < 19; y++) {
+        const floor = this.add.image(x * SCALED_TILE + 16, y * SCALED_TILE + 16, 'kenney_sheet', TILES.FLOOR_SERVICE);
+        floor.setScale(TILE_SCALE);
+      }
+    }
+
+    // 2. Murs de la pièce
     for (let x = 4; x < 21; x++) {
-      const topW = walls.create(x * 32 + 16, 4 * 32 + 16, 'tile_wall');
-      topW.refreshBody();
+      const topW = walls.create(x * SCALED_TILE + 16, 4 * SCALED_TILE + 16, 'kenney_sheet', TILES.WALL_INT);
+      topW.setScale(TILE_SCALE).refreshBody();
+
       if (x !== 12) {
-        const botW = walls.create(x * 32 + 16, 15 * 32 + 16, 'tile_wall');
-        botW.refreshBody();
+        const botW = walls.create(x * SCALED_TILE + 16, 15 * SCALED_TILE + 16, 'kenney_sheet', TILES.WALL_INT);
+        botW.setScale(TILE_SCALE).refreshBody();
       }
     }
     for (let y = 4; y < 16; y++) {
-      const leftW = walls.create(4 * 32 + 16, y * 32 + 16, 'tile_wall');
-      leftW.refreshBody();
-      const rightW = walls.create(20 * 32 + 16, y * 32 + 16, 'tile_wall');
-      rightW.refreshBody();
+      const leftW = walls.create(4 * SCALED_TILE + 16, y * SCALED_TILE + 16, 'kenney_sheet', TILES.WALL_INT);
+      leftW.setScale(TILE_SCALE).refreshBody();
+      const rightW = walls.create(20 * SCALED_TILE + 16, y * SCALED_TILE + 16, 'kenney_sheet', TILES.WALL_INT);
+      rightW.setScale(TILE_SCALE).refreshBody();
     }
 
-    // Porte de sortie au sud
-    this.add.image(12 * 32 + 16, 15 * 32 + 16, 'obj_door');
+    // Porte de sortie au Sud
+    const exitDoor = this.add.image(12 * SCALED_TILE + 16, 15 * SCALED_TILE + 16, 'kenney_sheet', TILES.DOOR_OFFICE);
+    exitDoor.setScale(TILE_SCALE);
 
-    // Mobilier : Comptoir / Bureau
-    const desk = walls.create(400, 280, 'obj_desk');
-    desk.refreshBody();
+    // 3. Mobilier Kenney : Bureau, chaises et étagères de dossiers
+    const desk = walls.create(400, 270, 'kenney_sheet', TILES.DESK);
+    desk.setScale(TILE_SCALE).setSize(32, 24).refreshBody();
 
-    this.add.image(390, 270, 'obj_pc');
-    this.add.image(420, 272, 'obj_sign');
+    const pc = this.add.image(400, 260, 'kenney_sheet', TILES.COMPUTER);
+    pc.setScale(TILE_SCALE);
 
-    // Panneau mural spécifique au service
-    const banner = this.add.rectangle(400, 160, 320, 28, this.serviceConfig.themeColor);
+    const shelf1 = walls.create(200, 180, 'kenney_sheet', TILES.BOOKSHELF);
+    shelf1.setScale(TILE_SCALE).refreshBody();
+    const shelf2 = walls.create(600, 180, 'kenney_sheet', TILES.BOOKSHELF);
+    shelf2.setScale(TILE_SCALE).refreshBody();
+
+    // Plaque murale du bureau
+    const banner = this.add.rectangle(400, 160, 320, 26, this.serviceConfig.themeColor);
     banner.setStrokeStyle(2, 0xffffff);
     this.add.text(400, 160, this.serviceConfig.signText, {
       fontSize: '13px',
@@ -70,19 +79,18 @@ export class ServiceScene extends Phaser.Scene {
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    // PNJ Responsable du service
-    const npcSheet = this.serviceConfig.id === 'service_technique' ? 'npc_tech_sheet' : 'npc_staff_sheet';
+    // 4. PNJ Responsable
     this.staffNPC = new NPC(
       this,
       400,
-      240,
-      npcSheet,
+      230,
+      'player_sheet',
       this.serviceConfig.npcName,
       this.serviceConfig.npcName,
       this.serviceConfig.dialogueId
     );
 
-    // Joueur (entre par la porte sud)
+    // Joueur
     this.player = new Player(this, 400, 440);
 
     this.physics.add.collider(this.player, walls);
@@ -95,20 +103,6 @@ export class ServiceScene extends Phaser.Scene {
       this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
       this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     }
-
-    // Clic souris
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      const distToNPC = Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, this.staffNPC.x, this.staffNPC.y);
-      if (distToNPC < 32) {
-        if (Phaser.Math.Distance.Between(this.player.x, this.player.y, this.staffNPC.x, this.staffNPC.y) < 65) {
-          this.interactWithStaff();
-        } else {
-          this.player.setMoveTarget(this.staffNPC.x, this.staffNPC.y + 40);
-        }
-      } else {
-        this.player.setMoveTarget(pointer.worldX, pointer.worldY);
-      }
-    });
   }
 
   update() {
@@ -119,7 +113,7 @@ export class ServiceScene extends Phaser.Scene {
     const nearExit = this.player.y > 470 && Math.abs(this.player.x - 400) < 30;
 
     if (distToStaff < 65) {
-      ui.events.emit('show_prompt', `Appuyez sur [E] ou Clic pour parler à ${this.serviceConfig.npcName}`);
+      ui.events.emit('show_prompt', `Appuyez sur [E] pour parler à ${this.serviceConfig.npcName}`);
       if (Phaser.Input.Keyboard.JustDown(this.interactKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
         this.interactWithStaff();
       }
@@ -141,7 +135,6 @@ export class ServiceScene extends Phaser.Scene {
 
   private exitToHallway() {
     SoundSystem.getInstance().playDoor();
-    // Le joueur revient dans le couloir à proximité de la porte du service visité
     let spawnY = 240;
     if (this.serviceConfig.id === 'service_etudiant') spawnY = 120;
     else if (this.serviceConfig.id === 'service_administratif') spawnY = 240;

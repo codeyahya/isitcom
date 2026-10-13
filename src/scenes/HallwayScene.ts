@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { NPC } from '../entities/NPC';
 import { SERVICES } from '../data/services';
+import { TILES, SCALED_TILE, TILE_SCALE } from '../game/constants';
 import { SoundSystem } from '../systems/SoundSystem';
 
 export class HallwayScene extends Phaser.Scene {
@@ -11,7 +12,6 @@ export class HallwayScene extends Phaser.Scene {
   private interactKey!: Phaser.Input.Keyboard.Key;
   private enterKey!: Phaser.Input.Keyboard.Key;
   private npcs: NPC[] = [];
-
   private doors: { serviceId: string; x: number; y: number; name: string }[] = [];
 
   constructor() {
@@ -19,35 +19,39 @@ export class HallwayScene extends Phaser.Scene {
   }
 
   create(data?: { spawnX?: number; spawnY?: number }) {
-    this.scene.get('UIScene').events.emit('set_zone_name', 'ISITCOM - Couloir des Services');
-
-    // Carrelage d'intérieur
-    for (let x = 0; x < 25; x++) {
-      for (let y = 0; y < 19; y++) {
-        this.add.image(x * 32 + 16, y * 32 + 16, 'tile_indoor_floor');
-      }
-    }
+    this.scene.get('UIScene').events.emit('set_zone_name', 'ISITCOM — Couloir des Services');
 
     const walls = this.physics.add.staticGroup();
 
-    // Murs extérieurs du couloir
+    // 1. Sol intérieur
     for (let x = 0; x < 25; x++) {
-      const topWall = walls.create(x * 32 + 16, 16, 'tile_wall');
+      for (let y = 0; y < 19; y++) {
+        const floor = this.add.image(x * SCALED_TILE + 16, y * SCALED_TILE + 16, 'kenney_sheet', TILES.FLOOR_INDOOR);
+        floor.setScale(TILE_SCALE);
+      }
+    }
+
+    // 2. Murs Nord et Sud
+    for (let x = 0; x < 25; x++) {
+      const topWall = walls.create(x * SCALED_TILE + 16, 16, 'kenney_sheet', TILES.WALL_INT);
+      topWall.setScale(TILE_SCALE);
       topWall.refreshBody();
+
       if (x < 11 || x > 13) {
-        const bottomWall = walls.create(x * 32 + 16, 584, 'tile_wall');
+        const bottomWall = walls.create(x * SCALED_TILE + 16, 584, 'kenney_sheet', TILES.WALL_INT);
+        bottomWall.setScale(TILE_SCALE);
         bottomWall.refreshBody();
       }
     }
 
-    // Mur droit continu
+    // Mur droit
     for (let y = 1; y < 18; y++) {
-      const rightWall = walls.create(750, y * 32 + 16, 'tile_wall');
+      const rightWall = walls.create(750, y * SCALED_TILE + 16, 'kenney_sheet', TILES.WALL_INT);
+      rightWall.setScale(TILE_SCALE);
       rightWall.refreshBody();
     }
 
-    // 4 PORTES SUR LE CÔTÉ GAUCHE DU COULOIR
-    // Mur gauche avec les ouvertures pour les 4 portes des services
+    // 3. Les 4 portes des services sur le côté GAUCHE (x = 200)
     this.doors = [
       { serviceId: 'service_etudiant', x: 200, y: 120, name: SERVICES['service_etudiant'].name },
       { serviceId: 'service_administratif', x: 200, y: 240, name: SERVICES['service_administratif'].name },
@@ -56,30 +60,35 @@ export class HallwayScene extends Phaser.Scene {
     ];
 
     for (let y = 0; y < 19; y++) {
-      const yPos = y * 32 + 16;
-      const isDoorZone = this.doors.some(d => Math.abs(d.y - yPos) < 20);
+      const yPos = y * SCALED_TILE + 16;
+      const isDoor = this.doors.some(d => Math.abs(d.y - yPos) < 20);
 
-      if (!isDoorZone) {
-        const leftWall = walls.create(200, yPos, 'tile_wall');
+      if (!isDoor) {
+        const leftWall = walls.create(200, yPos, 'kenney_sheet', TILES.WALL_INT);
+        leftWall.setScale(TILE_SCALE);
         leftWall.refreshBody();
       }
     }
 
-    // Ajout visuel des portes et panneaux
+    // Rendu visuel des portes Kenney et plaques indicatives
     this.doors.forEach(door => {
-      this.add.image(door.x, door.y, 'obj_door');
-      this.add.image(door.x + 32, door.y, 'obj_sign');
+      const dImg = this.add.image(door.x, door.y, 'kenney_sheet', TILES.DOOR_OFFICE);
+      dImg.setScale(TILE_SCALE);
+
+      const signImg = this.add.image(door.x + 32, door.y, 'kenney_sheet', TILES.SIGN);
+      signImg.setScale(TILE_SCALE);
+
       this.add.text(door.x + 48, door.y - 8, door.name, {
         fontSize: '12px',
         color: '#1e3a8a',
-        backgroundColor: '#ffffffcc',
+        backgroundColor: '#ffffffdd',
         padding: { x: 4, y: 2 },
         fontStyle: 'bold'
       });
     });
 
-    // PNJ dans le couloir
-    const guide = new NPC(this, 540, 280, 'npc_student_sheet', 'sarra_guide', 'Sarra (Déléguée)', 'hallway_guide');
+    // PNJ Déléguée
+    const guide = new NPC(this, 540, 280, 'player_sheet', 'sarra_guide', 'Sarra (Déléguée)', 'hallway_guide');
     this.npcs.push(guide);
 
     // Joueur
@@ -98,28 +107,16 @@ export class HallwayScene extends Phaser.Scene {
       this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     }
 
-    // Clic souris
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       const clickedDoor = this.doors.find(d => Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, d.x, d.y) < 32);
       if (clickedDoor) {
-        if (Phaser.Math.Distance.Between(this.player.x, this.player.y, clickedDoor.x, clickedDoor.y) < 50) {
+        if (Phaser.Math.Distance.Between(this.player.x, this.player.y, clickedDoor.x, clickedDoor.y) < 55) {
           this.enterService(clickedDoor.serviceId);
         } else {
           this.player.setMoveTarget(clickedDoor.x + 36, clickedDoor.y);
         }
         return;
       }
-
-      const clickedNPC = this.npcs.find(npc => Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, npc.x, npc.y) < 30);
-      if (clickedNPC) {
-        if (Phaser.Math.Distance.Between(this.player.x, this.player.y, clickedNPC.x, clickedNPC.y) < 55) {
-          this.interactWithNPC(clickedNPC);
-        } else {
-          this.player.setMoveTarget(clickedNPC.x, clickedNPC.y + 24);
-        }
-        return;
-      }
-
       this.player.setMoveTarget(pointer.worldX, pointer.worldY);
     });
   }
@@ -127,18 +124,6 @@ export class HallwayScene extends Phaser.Scene {
   update() {
     this.player.update(this.cursors, this.wasdKeys);
 
-    const ui = this.scene.get('UIScene');
-
-    // Détection PNJ
-    let nearNPC: NPC | null = null;
-    for (const npc of this.npcs) {
-      if (Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.x, npc.y) < 50) {
-        nearNPC = npc;
-        break;
-      }
-    }
-
-    // Détection portes des services sur la gauche
     let nearDoor: { serviceId: string; name: string } | null = null;
     for (const door of this.doors) {
       if (Phaser.Math.Distance.Between(this.player.x, this.player.y, door.x, door.y) < 45) {
@@ -147,15 +132,10 @@ export class HallwayScene extends Phaser.Scene {
       }
     }
 
-    // Sortie vers l'extérieur
     const nearExit = this.player.y > 550 && Math.abs(this.player.x - 400) < 60;
+    const ui = this.scene.get('UIScene');
 
-    if (nearNPC) {
-      ui.events.emit('show_prompt', `Appuyez sur [E] ou Clic pour parler à ${nearNPC.npcName}`);
-      if (Phaser.Input.Keyboard.JustDown(this.interactKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
-        this.interactWithNPC(nearNPC);
-      }
-    } else if (nearDoor) {
+    if (nearDoor) {
       ui.events.emit('show_prompt', `Appuyez sur [E] pour entrer au ${nearDoor.name}`);
       if (Phaser.Input.Keyboard.JustDown(this.interactKey) || Phaser.Input.Keyboard.JustDown(this.enterKey) || this.player.x < 210) {
         this.enterService(nearDoor.serviceId);
@@ -170,12 +150,6 @@ export class HallwayScene extends Phaser.Scene {
     }
   }
 
-  private interactWithNPC(npc: NPC) {
-    this.player.setVelocity(0, 0);
-    this.player.clearMoveTarget();
-    this.scene.get('UIScene').events.emit('show_dialogue', npc.dialogueId);
-  }
-
   private enterService(serviceId: string) {
     SoundSystem.getInstance().playDoor();
     this.scene.start('ServiceScene', { serviceId });
@@ -183,7 +157,7 @@ export class HallwayScene extends Phaser.Scene {
 
   private exitToExterior() {
     SoundSystem.getInstance().playDoor();
-    this.scene.start('ExteriorScene', { spawnX: 400, spawnY: 230 });
+    this.scene.start('ExteriorScene', { spawnX: 400, spawnY: 210 });
   }
 
   public pausePlayerMovement() {

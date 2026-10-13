@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { NPC } from '../entities/NPC';
+import { TILES, SCALED_TILE, TILE_SCALE } from '../game/constants';
 import { SoundSystem } from '../systems/SoundSystem';
 
 export class ExteriorScene extends Phaser.Scene {
@@ -10,82 +11,78 @@ export class ExteriorScene extends Phaser.Scene {
   private interactKey!: Phaser.Input.Keyboard.Key;
   private enterKey!: Phaser.Input.Keyboard.Key;
   private npcs: NPC[] = [];
-  private entranceZone!: Phaser.GameObjects.Zone;
 
   constructor() {
     super('ExteriorScene');
   }
 
   create(data?: { spawnX?: number; spawnY?: number }) {
-    this.scene.get('UIScene').events.emit('set_zone_name', 'ISITCOM - Esplanade Extérieure');
+    this.scene.get('UIScene').events.emit('set_zone_name', 'ISITCOM — Esplanade Extérieure');
 
-    // 1. Fond extérieur : Pelouse et allées
-    for (let x = 0; x < 25; x++) {
-      for (let y = 0; y < 19; y++) {
-        this.add.image(x * 32 + 16, y * 32 + 16, 'tile_grass');
-      }
-    }
-
-    // Allée centrale vers l'entrée
-    for (let x = 10; x <= 14; x++) {
-      for (let y = 7; y < 19; y++) {
-        this.add.image(x * 32 + 16, y * 32 + 16, 'tile_path');
-      }
-    }
-
-    // Allée horizontale
-    for (let x = 3; x < 22; x++) {
-      for (let y = 14; y <= 15; y++) {
-        this.add.image(x * 32 + 16, y * 32 + 16, 'tile_path');
-      }
-    }
-
-    // 2. Bâtiment principal ISITCOM Sousse
     const obstacles = this.physics.add.staticGroup();
 
-    // Murs de la façade
-    for (let x = 2; x < 23; x++) {
-      for (let y = 1; y < 7; y++) {
-        if (y === 6 && (x === 11 || x === 12 || x === 13)) {
-          // Entrée principale
-          this.add.image(x * 32 + 16, y * 32 + 16, 'obj_door');
+    // 1. Sol : Pelouse et Allée piétonne centrale
+    for (let x = 0; x < 25; x++) {
+      for (let y = 0; y < 19; y++) {
+        const isPath = (x >= 10 && x <= 14 && y >= 6) || (x >= 3 && x <= 21 && y >= 14 && y <= 15);
+        const tileIndex = isPath ? TILES.PATH : (x % 3 === 0 && y % 3 === 0 ? TILES.GRASS_FLOWERS : TILES.GRASS);
+        
+        const img = this.add.image(x * SCALED_TILE + 16, y * SCALED_TILE + 16, 'kenney_sheet', tileIndex);
+        img.setScale(TILE_SCALE);
+      }
+    }
+
+    // 2. Façade du bâtiment ISITCOM
+    for (let x = 3; x <= 21; x++) {
+      for (let y = 1; y <= 5; y++) {
+        if (y === 5 && (x === 11 || x === 12 || x === 13)) {
+          // Porte d'entrée
+          const door = this.add.image(x * SCALED_TILE + 16, y * SCALED_TILE + 16, 'kenney_sheet', TILES.ENTRANCE_DOOR);
+          door.setScale(TILE_SCALE);
         } else {
-          const wall = obstacles.create(x * 32 + 16, y * 32 + 16, 'tile_wall');
+          // Murs du bâtiment
+          const wallTile = (y === 1) ? TILES.WALL_ROOF : TILES.WALL_EXT;
+          const wall = obstacles.create(x * SCALED_TILE + 16, y * SCALED_TILE + 16, 'kenney_sheet', wallTile);
+          wall.setScale(TILE_SCALE);
           wall.refreshBody();
         }
       }
     }
 
-    // Enseigne universitaire sur la façade
-    const signBoard = this.add.rectangle(400, 80, 360, 34, 0x1d4ed8);
-    signBoard.setStrokeStyle(2, 0xf59e0b);
-    this.add.text(400, 80, 'ISITCOM - UNIVERSITÉ DE SOUSSE', {
-      fontSize: '15px',
+    // Enseigne universitaire
+    const sign = this.add.rectangle(400, 50, 360, 30, 0x1d4ed8);
+    sign.setStrokeStyle(2, 0xf59e0b);
+    this.add.text(400, 50, 'ISITCOM — UNIVERSITÉ DE SOUSSE', {
+      fontSize: '14px',
       color: '#ffffff',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    // Végétation et bancs
-    const treePositions = [
-      { x: 90, y: 320 }, { x: 170, y: 360 }, { x: 630, y: 320 }, { x: 710, y: 360 },
+    // 3. Arbres et bancs
+    const treeCoords = [
+      { x: 80, y: 300 }, { x: 180, y: 350 }, { x: 620, y: 300 }, { x: 720, y: 350 },
       { x: 100, y: 480 }, { x: 700, y: 480 }
     ];
-    treePositions.forEach(pos => {
-      const tree = obstacles.create(pos.x, pos.y, 'obj_tree');
-      tree.setSize(24, 20).setOffset(12, 44);
+    treeCoords.forEach(pos => {
+      const tree = obstacles.create(pos.x, pos.y, 'kenney_sheet', TILES.TREE_TOP);
+      tree.setScale(TILE_SCALE);
+      tree.setSize(24, 24).setOffset(4, 8);
       tree.refreshBody();
     });
 
-    const bench1 = obstacles.create(250, 480, 'obj_bench');
+    const bench1 = obstacles.create(250, 480, 'kenney_sheet', TILES.BENCH);
+    bench1.setScale(TILE_SCALE);
     bench1.refreshBody();
-    const bench2 = obstacles.create(550, 480, 'obj_bench');
+
+    const bench2 = obstacles.create(550, 480, 'kenney_sheet', TILES.BENCH);
+    bench2.setScale(TILE_SCALE);
     bench2.refreshBody();
 
-    // 3. PNJ étudiant extérieur
-    const student = new NPC(this, 320, 320, 'npc_student_sheet', 'etudiant_ext', 'Yassine (L3)', 'welcome_student');
+    // 4. PNJ étudiant extérieur
+    const student = new NPC(this, 320, 320, 'player_sheet', 'etudiant_ext', 'Yassine (L3)', 'welcome_student');
     this.npcs.push(student);
 
-    // 4. Joueur
+    // 5. Joueur
     const startX = data?.spawnX ?? 400;
     const startY = data?.spawnY ?? 520;
     this.player = new Player(this, startX, startY);
@@ -93,11 +90,7 @@ export class ExteriorScene extends Phaser.Scene {
     this.physics.add.collider(this.player, obstacles);
     this.npcs.forEach(npc => this.physics.add.collider(this.player, npc));
 
-    // 5. Zone de transition : Entrée principale vers le couloir
-    this.entranceZone = this.add.zone(400, 200, 80, 20);
-    this.physics.add.existing(this.entranceZone, true);
-
-    // 6. Contrôles
+    // Contrôles
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasdKeys = this.input.keyboard.addKeys('W,A,S,D,Z,Q') as { [key: string]: Phaser.Input.Keyboard.Key };
@@ -105,33 +98,23 @@ export class ExteriorScene extends Phaser.Scene {
       this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
     }
 
-    // Gestion du clic de souris pour déplacement ou interaction
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.leftButtonDown()) {
-        const clickedNPC = this.npcs.find(npc => {
-          return Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, npc.x, npc.y) < 30;
-        });
-
-        if (clickedNPC) {
-          const distToPlayer = Phaser.Math.Distance.Between(this.player.x, this.player.y, clickedNPC.x, clickedNPC.y);
-          if (distToPlayer < 60) {
-            this.interactWithNPC(clickedNPC);
-          } else {
-            this.player.setMoveTarget(clickedNPC.x, clickedNPC.y + 24);
-          }
+      const clickedNPC = this.npcs.find(npc => Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, npc.x, npc.y) < 35);
+      if (clickedNPC) {
+        if (Phaser.Math.Distance.Between(this.player.x, this.player.y, clickedNPC.x, clickedNPC.y) < 60) {
+          this.interactWithNPC(clickedNPC);
         } else {
-          this.player.setMoveTarget(pointer.worldX, pointer.worldY);
+          this.player.setMoveTarget(clickedNPC.x, clickedNPC.y + 24);
         }
+      } else {
+        this.player.setMoveTarget(pointer.worldX, pointer.worldY);
       }
     });
-
-    this.cameras.main.setBounds(0, 0, 800, 600);
   }
 
   update() {
     this.player.update(this.cursors, this.wasdKeys);
 
-    // Vérification de l'interaction avec le PNJ
     let nearNPC: NPC | null = null;
     for (const npc of this.npcs) {
       if (Phaser.Math.Distance.Between(this.player.x, this.player.y, npc.x, npc.y) < 50) {
@@ -140,18 +123,17 @@ export class ExteriorScene extends Phaser.Scene {
       }
     }
 
-    // Détection d'entrée dans le bâtiment
-    const nearEntrance = Phaser.Math.Distance.Between(this.player.x, this.player.y, 400, 210) < 40;
-
+    const nearEntrance = Phaser.Math.Distance.Between(this.player.x, this.player.y, 400, 180) < 40;
     const ui = this.scene.get('UIScene');
+
     if (nearNPC) {
       ui.events.emit('show_prompt', `Appuyez sur [E] ou Clic pour parler à ${nearNPC.npcName}`);
       if (Phaser.Input.Keyboard.JustDown(this.interactKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
         this.interactWithNPC(nearNPC);
       }
     } else if (nearEntrance) {
-      ui.events.emit('show_prompt', 'Appuyez sur [E] ou avancez pour ENTRER dans l\'ISITCOM');
-      if (Phaser.Input.Keyboard.JustDown(this.interactKey) || Phaser.Input.Keyboard.JustDown(this.enterKey) || this.player.y < 210) {
+      ui.events.emit('show_prompt', 'Appuyez sur [E] pour ENTRER dans l\'ISITCOM');
+      if (Phaser.Input.Keyboard.JustDown(this.interactKey) || Phaser.Input.Keyboard.JustDown(this.enterKey) || this.player.y < 175) {
         this.enterBuilding();
       }
     } else {

@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { AssetGenerator } from '../systems/AssetGenerator';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -8,18 +7,28 @@ export class BootScene extends Phaser.Scene {
 
   preload() {
     const { width, height } = this.cameras.main;
-    const text = this.add.text(width / 2, height / 2, 'Chargement de l\'ISITCOM...', {
-      fontSize: '20px',
+
+    const loadingText = this.add.text(width / 2, height / 2, 'Chargement des graphismes Kenney...', {
+      fontSize: '15px',
       color: '#ffffff'
     }).setOrigin(0.5);
 
-    // Initialisation immédiate des textures graphiques pixel-art procédurales
-    AssetGenerator.createAllTextures(this);
-
-    this.time.delayedCall(400, () => {
-      text.setText('Prêt !');
-      this.scene.start('UIScene');
-      this.scene.start('ExteriorScene');
+    // 1. Découpage automatique de la spritesheet Kenney
+    this.load.spritesheet('kenney_sheet', 'assets/tiles/roguelikeSheet_transparent.png', {
+      frameWidth: 16,
+      frameHeight: 16,
+      margin: 0,
+      spacing: 1
     });
+
+    // 2. Spritesheet du joueur (32x32)
+    this.load.spritesheet('player_sheet', 'assets/characters/player.png', {
+      frameWidth: 32,
+      frameHeight: 32
+    });
+  }
+
+  create() {
+    this.scene.start('MenuScene');
   }
 }
