@@ -1,0 +1,28 @@
+import Phaser from 'phaser';
+import { GAME_WIDTH, GAME_HEIGHT } from './constants';
+import { BootScene } from '../scenes/BootScene';
+import { ExteriorScene } from '../scenes/ExteriorScene';
+import { HallwayScene } from '../scenes/HallwayScene';
+import { ServiceScene } from '../scenes/ServiceScene';
+import { UIScene } from '../scenes/UIScene';
+
+export const gameConfig: Phaser.Types.Core.GameConfig = {
+  type: Phaser.AUTO,
+  width: GAME_WIDTH,
+  height: GAME_HEIGHT,
+  parent: 'game-container',
+  pixelArt: true,
+  roundPixels: true,
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { x: 0, y: 0 },
+      debug: false
+    }
+  },
+  scene: [BootScene, ExteriorScene, HallwayScene, ServiceScene, UIScene]
+};
