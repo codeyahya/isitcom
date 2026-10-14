@@ -12,7 +12,22 @@ export const SHEETS = {
 export const LOOSE_ASSETS = {
   campusGrass: 'kenney_rpg-urban-pack/Tiles/tile_0000.png',
   campusPath: 'kenney_rpg-urban-pack/Tiles/tile_0008.png',
+  interiorFloorA: 'kenney_rpg-urban-pack/Tiles/tile_0085.png',
+  interiorFloorB: 'kenney_rpg-urban-pack/Tiles/tile_0086.png',
+  interiorFloorC: 'kenney_rpg-urban-pack/Tiles/tile_0087.png',
+  interiorWallA: 'kenney_rpg-urban-pack/Tiles/tile_0113.png',
+  interiorWallB: 'kenney_rpg-urban-pack/Tiles/tile_0114.png',
+  interiorWallC: 'kenney_rpg-urban-pack/Tiles/tile_0115.png',
   lpcGrass: 'lpc_base_assets/LPC Base Assets/tiles/grass.png'
+} as const;
+
+export const URBAN_LOOSE = {
+  FLOOR_A: { key: 'interiorFloorA_loose', frame: 0 },
+  FLOOR_B: { key: 'interiorFloorB_loose', frame: 0 },
+  FLOOR_C: { key: 'interiorFloorC_loose', frame: 0 },
+  WALL_A: { key: 'interiorWallA_loose', frame: 0 },
+  WALL_B: { key: 'interiorWallB_loose', frame: 0 },
+  WALL_C: { key: 'interiorWallC_loose', frame: 0 }
 } as const;
 
 const f = (sheet: keyof typeof SHEETS, c: number, r: number) => {

@@ -41,6 +41,21 @@ export class HallwayScene extends Phaser.Scene {
       }
     }
 
+    // Institute-style blocks: a tiled central avenue, carpeted room wings,
+    // and clear door landings instead of a single repeated strip.
+    for (let y = 1; y < 18; y++) {
+      this.put(11, y, ROOM.FLOOR_TILE);
+      this.put(12, y, ROOM_FLOORS[y % 2]);
+      this.put(13, y, ROOM.FLOOR_TILE);
+    }
+    for (let x = 1; x < 24; x++) {
+      this.put(x, 9, ROOM.FLOOR_TILE);
+      this.put(x, 10, ROOM_FLOORS[1]);
+    }
+    for (const [x, y] of [[10, 5], [14, 5], [10, 12], [14, 12]] as [number, number][]) {
+      this.put(x, y, ROOM.WALL_BASE);
+    }
+
     // Outer shell, double-thick room dividers, and central corridor openings.
     for (let x = 0; x < 25; x++) {
       this.put(x, 0, ROOM_WALLS[x % ROOM_WALLS.length], walls);
@@ -139,8 +154,8 @@ export class HallwayScene extends Phaser.Scene {
       padding: { x: 7, y: 4 }, fontStyle: 'bold'
     }).setOrigin(0.5));
 
-    // PNJ Déléguée
-    const guide = new NPC(this, 592, 248, 'sarra_sheet', 'sarra_guide', 'Sarra (Déléguée)', 'hallway_guide');
+    // PNJ Déléguée au centre du couloir principal.
+    const guide = new NPC(this, 400, 304, 'sarra_sheet', 'sarra_guide', 'Sarra (Déléguée)', 'hallway_guide');
     this.npcs.push(guide);
 
     this.player = new Player(this, data?.spawnX ?? 400, data?.spawnY ?? 540);

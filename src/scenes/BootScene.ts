@@ -16,8 +16,15 @@ export class BootScene extends Phaser.Scene {
     for (const [key, url] of Object.entries(CHARACTERS)) {
       this.load.spritesheet(key, url, { frameWidth: 32, frameHeight: 32 });
     }
-    this.load.image('campus_grass_loose', LOOSE_ASSETS.campusGrass);
-    this.load.image('campus_path_loose', LOOSE_ASSETS.campusPath);
+    for (const [key, url] of Object.entries(LOOSE_ASSETS)) {
+      if (key === 'lpcGrass') continue;
+      const textureKey = key === 'campusGrass'
+        ? 'campus_grass_loose'
+        : key === 'campusPath'
+          ? 'campus_path_loose'
+          : `${key}_loose`;
+      this.load.image(textureKey, url);
+    }
   }
 
   create() {

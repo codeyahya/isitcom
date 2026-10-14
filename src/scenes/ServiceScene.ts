@@ -96,6 +96,20 @@ export class ServiceScene extends Phaser.Scene {
       }
     }
 
+    // Institute-style room blocks: a calmer carpeted work zone, a tiled
+    // circulation lane, and a distinct reception/classroom landing.
+    for (let x = 5; x <= 19; x++) {
+      this.put(x, 9, ROOM.FLOOR_TILE);
+      this.put(x, 10, ROOM_FLOORS[1]);
+    }
+    for (let x = 8; x <= 16; x++) {
+      this.put(x, 6, ROOM.FLOOR_WOOD);
+      this.put(x, 7, ROOM.FLOOR_WOOD);
+    }
+    for (const x of [10, 11, 12, 13, 14]) {
+      this.put(x, 13, this.serviceConfig.id === 'service_pedagogique' ? ROOM.FLOOR_TILE : ROOM.FLOOR_CARPET);
+    }
+
     // 2. Murs de la pièce avec plinthes
     for (let x = 4; x < 21; x++) {
       this.put(x, 4, ROOM_WALLS[x % ROOM_WALLS.length], walls);
