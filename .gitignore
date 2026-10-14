@@ -4,6 +4,9 @@ node_modules/
 # Production build
 dist/
 
+# Archives
+*.zip
+
 # Environment variables and secrets
 .env
 .env.*
