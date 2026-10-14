@@ -20,6 +20,7 @@ export class UIScene extends Phaser.Scene {
   private missionContainer!: Phaser.GameObjects.Container;
   private missionTitleText!: Phaser.GameObjects.Text;
   private missionDescText!: Phaser.GameObjects.Text;
+  private missionRows: Phaser.GameObjects.Text[] = [];
 
   private zoneBannerText!: Phaser.GameObjects.Text;
   private interactionPromptText!: Phaser.GameObjects.Text;
@@ -76,8 +77,8 @@ export class UIScene extends Phaser.Scene {
     }).setDepth(100);
 
     // Traqueur de Mission en haut à droite
-    this.missionContainer = this.add.container(480, 16).setDepth(100);
-    const mBg = this.add.rectangle(0, 0, 300, 72, 0x0f172a, 0.9).setOrigin(0, 0);
+    this.missionContainer = this.add.container(472, 16).setDepth(100);
+    const mBg = this.add.rectangle(0, 0, 316, 148, 0x0f172a, 0.94).setOrigin(0, 0);
     mBg.setStrokeStyle(2, 0x3b82f6);
 
     const mHeader = this.add.text(12, 8, 'OBJECTIF EN COURS :', {
@@ -85,18 +86,20 @@ export class UIScene extends Phaser.Scene {
       color: '#93c5fd',
       fontStyle: 'bold'
     });
-    this.missionTitleText = this.add.text(12, 26, this.missions[this.currentMissionIdx].title, {
-      fontSize: '13px',
-      color: '#fbbf24',
-      fontStyle: 'bold'
-    });
-    this.missionDescText = this.add.text(12, 46, this.missions[this.currentMissionIdx].hint, {
-      fontSize: '11px',
-      color: '#cbd5e1',
-      wordWrap: { width: 280 }
+    this.missionTitleText = this.add.text(12, 26, '', { fontSize: '12px', color: '#fbbf24' });
+    this.missionDescText = this.add.text(12, 42, '', {
+      fontSize: '10px', color: '#cbd5e1', wordWrap: { width: 292 }
     });
 
     this.missionContainer.add([mBg, mHeader, this.missionTitleText, this.missionDescText]);
+    this.missions.slice(0, 4).forEach((_, index) => {
+      const row = this.add.text(12, 62 + index * 19, '', {
+        fontSize: '10px', color: '#e2e8f0', fontStyle: 'bold'
+      });
+      this.missionRows.push(row);
+      this.missionContainer.add(row);
+    });
+    this.renderMissionBoard();
 
     // Invite contextuelle d'interaction
     this.interactionPromptText = this.add.text(400, 520, '', {
@@ -218,9 +221,29 @@ export class UIScene extends Phaser.Scene {
         this.showEndModal();
       }
 
-      this.missionTitleText.setText(this.missions[this.currentMissionIdx].title);
-      this.missionDescText.setText(this.missions[this.currentMissionIdx].hint);
+      this.renderMissionBoard(true);
       this.saveCurrentProgress();
+    }
+  }
+
+  private renderMissionBoard(animate = false) {
+    const active = this.missions[this.currentMissionIdx] ?? this.missions[this.missions.length - 1];
+    this.missionTitleText.setText(`En cours : ${active.title}`);
+    this.missionDescText.setText(active.hint);
+    this.missionRows.forEach((row, index) => {
+      const mission = this.missions[index];
+      if (!mission) {
+        row.setVisible(false);
+        return;
+      }
+      row.setVisible(true)
+        .setText(`${mission.completed ? '✓' : '○'} ${mission.title}`)
+        .setColor(mission.completed ? '#86efac' : mission === active ? '#fbbf24' : '#e2e8f0')
+        .setAlpha(mission.completed ? 0.72 : 1);
+    });
+    if (animate) {
+      this.missionContainer.setScale(1.04);
+      this.tweens.add({ targets: this.missionContainer, scale: 1, duration: 220, ease: 'Back.Out' });
     }
   }
 

@@ -1,34 +1,30 @@
 import Phaser from 'phaser';
+import { SHEETS, CHARACTERS, LOOSE_ASSETS } from '../data/art';
 
 export class BootScene extends Phaser.Scene {
-  constructor() {
-    super('BootScene');
-  }
+  constructor() { super('BootScene'); }
 
   preload() {
     const { width, height } = this.cameras.main;
-
-    const loadingText = this.add.text(width / 2, height / 2, 'Chargement des graphismes Kenney...', {
-      fontSize: '15px',
-      color: '#ffffff'
+    this.add.text(width / 2, height / 2, 'Chargement du campus ISITCOM...', {
+      fontSize: '15px', color: '#ffffff'
     }).setOrigin(0.5);
 
-    // 1. Découpage automatique de la spritesheet Kenney
-    this.load.spritesheet('kenney_sheet', 'assets/tiles/roguelikeSheet_transparent.png', {
-      frameWidth: 16,
-      frameHeight: 16,
-      margin: 0,
-      spacing: 1
-    });
-
-    // 2. Spritesheet du joueur (32x32)
-    this.load.spritesheet('player_sheet', 'assets/characters/player.png', {
-      frameWidth: 32,
-      frameHeight: 32
-    });
+    for (const s of Object.values(SHEETS)) {
+      this.load.spritesheet(s.key, s.url, { frameWidth: 16, frameHeight: 16 });
+    }
+    for (const [key, url] of Object.entries(CHARACTERS)) {
+      this.load.spritesheet(key, url, { frameWidth: 32, frameHeight: 32 });
+    }
+    this.load.image('campus_grass_loose', LOOSE_ASSETS.campusGrass);
+    this.load.image('campus_path_loose', LOOSE_ASSETS.campusPath);
   }
 
   create() {
-    this.scene.start('MenuScene');
+    if (window.location.hash === '#tiles') {
+      this.scene.start('DevTileBrowserScene');
+    } else {
+      this.scene.start('MenuScene');
+    }
   }
 }

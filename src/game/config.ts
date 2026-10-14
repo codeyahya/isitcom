@@ -6,6 +6,7 @@ import { ExteriorScene } from '../scenes/ExteriorScene';
 import { HallwayScene } from '../scenes/HallwayScene';
 import { ServiceScene } from '../scenes/ServiceScene';
 import { UIScene } from '../scenes/UIScene';
+import { DevTileBrowserScene } from '../scenes/DevTileBrowserScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -26,5 +27,5 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     }
   },
   // MenuScene DOIT impérativement figurer dans ce tableau :
-  scene: [BootScene, MenuScene, ExteriorScene, HallwayScene, ServiceScene, UIScene]
+  scene: [BootScene, MenuScene, ExteriorScene, HallwayScene, ServiceScene, UIScene, DevTileBrowserScene]
 };

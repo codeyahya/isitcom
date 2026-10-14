@@ -2,15 +2,11 @@
 ```markdown
 # Crédits des Ressources Graphiques et Audio
 
-## 🎨 Graphismes et Pixel-Art
-- **Textures & Sprites procéduraux originaux** créés programmatiquement par le moteur `AssetGenerator.ts` :
-  - Tuiles de sol, pelouse, allée et murs intérieurs/extérieurs.
-  - Mobilier : bureaux, ordinateurs, portes en bois, bancs et arbres.
-  - Spritesheets de personnages (4 directions avec cycles de marche) :
-    - Joueur étudiant
-    - PNJ Étudiants (Yassine, Sarra)
-    - PNJ Équipe administrative & pédagogique (Mme Ben Salem, M. Mansour, Dr. Karoui)
-    - PNJ Service Technique (Ing. Slim)
+## 🎨 Graphismes
+- **LimeZu — Modern Interiors (Free v2.2)** : murs, sols, portes et mobilier des bureaux et du couloir.
+- **Kenney — RPG Urban Pack** (CC0) : esplanade extérieure (pelouse, arbres, bancs, lampadaires).
+- **Kenney — Roguelike RPG Pack** (CC0) : réserve de tuiles.
+- **PIPOYA — Free RPG Character Sprites 32x32** : joueur et personnages non-joueurs.
 - **Licence** : Creative Commons Zero (CC0) 1.0 Universal / Code Source Domaine Public.
 
 ## 🔊 Effets Sonores Rétro
